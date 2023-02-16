@@ -1,5 +1,12 @@
-project(debugger)
+cmake_policy(SET CMP0048 NEW)
+project(
+    debugger
+    VERSION 0.0.0
+    LANGUAGES CXX
+)
+
 cmake_minimum_required(VERSION 3.22)
+set(CXX_STANDARD 17)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -16,9 +23,10 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(spdlog linenoise)
 
-add_executable(debugger src/main.cpp src/debugger.cpp)
+add_executable(debugger src/main.cpp src/debugger.cpp src/util.cpp)
 target_include_directories(debugger PRIVATE include)
 target_link_libraries(debugger PRIVATE spdlog::spdlog linenoise)
+target_compile_options(debugger PRIVATE -Wall -Wextra -std=c++17)
 
 if(DEBUGGER_EXAMPLE)
     add_executable(simple example/simple.cpp)

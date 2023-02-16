@@ -36,8 +36,7 @@ int main(int argc, char** argv) {
             return -1;
         }
     } else if(pid >= 1) {
-        debugger dbg {program_name, pid};
-        dbg.run();
+        nkgt::debugger::run(pid);
     } else {
         print_error_message("fork");
         return -1;

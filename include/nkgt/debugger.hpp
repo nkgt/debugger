@@ -1,11 +1,8 @@
-#include <string>
+#pragma once
+#include <sys/types.h>
 
-class debugger {
-public:
-    debugger(std::string program_name, pid_t pid);
-    void run();
+namespace nkgt::debugger {
 
-private:
-    std::string _program_name;
-    pid_t _pid;
-};
+void run(pid_t pid);
+
+}
