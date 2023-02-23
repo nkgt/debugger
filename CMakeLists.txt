@@ -36,3 +36,7 @@ if(DEBUGGER_EXAMPLE)
     add_executable(simple example/simple.cpp)
     target_compile_options(simple PRIVATE -g -O0)
 endif()
+
+if(DEBUGGER_TESTS)
+    add_subdirectory(tests)
+endif()
