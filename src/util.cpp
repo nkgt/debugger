@@ -19,15 +19,6 @@ std::vector<std::string_view> split(std::string_view s, char delimiter) {
         max -= 1;
     }
 
-    // TODO: We could  make the algorithm O(1) for strings that do not contain
-    // any delimiter character by doing the following at this point
-    //
-    //     if(min == 0 && max == s.size() - 1) {
-    //         return {s};
-    //     }
-    //
-    // Worth it?
-
     std::size_t token_count = 1;
     for (std::size_t i = min; i <= max; ++i) {
         if (s[i] == delimiter) {
