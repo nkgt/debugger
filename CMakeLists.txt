@@ -23,10 +23,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(spdlog linenoise)
 
-add_executable(debugger src/main.cpp src/debugger.cpp src/util.cpp)
-target_include_directories(debugger PRIVATE include)
+add_library(debugger src/debugger.cpp src/util.cpp)
+target_include_directories(debugger PUBLIC include)
 target_link_libraries(debugger PRIVATE spdlog::spdlog linenoise)
 target_compile_options(debugger PRIVATE -Wall -Wextra -std=c++17)
+
+add_executable(dbg frontend/main.cpp)
+target_link_libraries(dbg PRIVATE spdlog::spdlog debugger)
+target_compile_options(dbg PRIVATE -Wall -Wextra -std=c++17)
 
 if(DEBUGGER_EXAMPLE)
     add_executable(simple example/simple.cpp)
