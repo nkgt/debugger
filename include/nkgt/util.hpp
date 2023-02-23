@@ -13,8 +13,8 @@ namespace nkgt::util {
 // Example: split("  a   bb ", ' ') -> {"a", "bb"}
 std::vector<std::string_view> split(std::string_view source, char delimiter);
 
-// Check if prefix is a prefix of full. That is, if of is equal to or starts
-// with s.
+// Check if prefix is a prefix of full. That is, if full is equal to or starts
+// with prefix.
 bool is_prefix(std::string_view prefix, std::string_view full);
 
 }

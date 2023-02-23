@@ -56,7 +56,7 @@ std::vector<std::string_view> split(std::string_view s, char delimiter) {
 }
 
 bool is_prefix(std::string_view s, std::string_view of) {
-    if(s.size() > of.size()) {
+    if(s.size() > of.size() || s.empty()) {
         return false;
     }
 
