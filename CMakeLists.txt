@@ -12,9 +12,9 @@ include(cmake/compiler_flags.cmake)
 include(FetchContent)
 
 FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog
-    GIT_TAG        v1.11.0
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt
+    GIT_TAG        9.1.0
 )
 
 FetchContent_Declare(
@@ -23,15 +23,15 @@ FetchContent_Declare(
     GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(spdlog linenoise)
+FetchContent_MakeAvailable(fmt linenoise)
 
 add_library(debugger src/debugger.cpp src/util.cpp)
 target_include_directories(debugger PUBLIC include)
-target_link_libraries(debugger PRIVATE spdlog::spdlog linenoise)
+target_link_libraries(debugger PRIVATE fmt::fmt linenoise)
 set_compiler_flags(debugger)
 
 add_executable(dbg frontend/main.cpp)
-target_link_libraries(dbg PRIVATE spdlog::spdlog debugger)
+target_link_libraries(dbg PRIVATE fmt::fmt debugger)
 set_compiler_flags(dbg)
 
 if(DEBUGGER_EXAMPLE)

@@ -3,12 +3,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 #include "nkgt/debugger.hpp"
 
 void print_error_message(const char* procedure_name) {
-    spdlog::error(
+    fmt::print(
         "{} failure\n\tError code: {}\n\tError message: {}",
         procedure_name,
         strerrorname_np(errno),
@@ -16,9 +16,9 @@ void print_error_message(const char* procedure_name) {
     );
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
     if(argc < 2) {
-        spdlog::error("Program name not specified!");
+        fmt::print("Program name not specified!");
         return -1;
     }
 

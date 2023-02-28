@@ -2,7 +2,7 @@
 #include "nkgt/util.hpp"
 
 #include <linenoise.h>
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 #include <sys/ptrace.h>
 #include <sys/wait.h>
@@ -29,7 +29,7 @@ static void handle_command(const std::string& line, pid_t pid) {
     if(nkgt::util::is_prefix(command, "continue")) {
         continue_execution(pid);
     } else {
-        spdlog::error("Unknow command");
+        fmt::print("Unknow command");
     }
 }
 
