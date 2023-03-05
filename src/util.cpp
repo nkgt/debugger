@@ -1,6 +1,27 @@
 #include "nkgt/util.hpp"
 
+#include <fmt/core.h>
+
 namespace nkgt::util {
+
+void print_error_message(const char* procedure_name, int error_number) {
+    if(error_number <= 0) {
+        fmt::print(
+            "{} failure with invalid errno value {}",
+            procedure_name,
+            error_number
+        );
+        
+        return;
+    }
+
+    fmt::print(
+        "{} failure\n\tError code: {}\n\tError message: {}",
+        procedure_name,
+        strerrorname_np(error_number),
+        strerror(error_number)
+    );
+}
 
 std::vector<std::string_view> split(std::string_view s, char delimiter) {
     // If s is empty we have that min == s.size() == 0 so that the while is
