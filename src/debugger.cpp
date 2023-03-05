@@ -6,6 +6,7 @@
 #include <fmt/core.h>
 
 #include <cerrno>
+#include <charconv>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
@@ -19,6 +20,24 @@ static void continue_execution(pid_t pid) {
     waitpid(pid, &wait_status, options);
 }
 
+static void try_set_breakpoint(std::string_view address_str, pid_t pid) {
+    long address = 0;
+    auto [_, ec] = std::from_chars(
+        address_str.data() + 2, 
+        address_str.data() + address_str.size(), 
+        address,
+        16
+    );
+
+    if(ec != std::errc()) {
+        fmt::print("Invalid argument passed to break command.\n");
+        return;
+    }
+
+    breakpoint bp = {pid, address};
+    enable_brakpoint(bp);
+}
+
 static void handle_command(const std::string& line, pid_t pid) {
     std::vector<std::string_view> args = nkgt::util::split(line, ' ');
 
@@ -30,6 +49,13 @@ static void handle_command(const std::string& line, pid_t pid) {
 
     if(nkgt::util::is_prefix(command, "continue")) {
         continue_execution(pid);
+    } else if(util::is_prefix(command, "break")) {
+        if(args.size() != 2) {
+            fmt::print("Missing argument for break command.\n");
+            return;
+        }
+
+        try_set_breakpoint(args[1], pid);
     } else {
         fmt::print("Unknow command\n");
     }

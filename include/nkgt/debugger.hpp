@@ -11,8 +11,8 @@ namespace nkgt::debugger {
 struct breakpoint {
     pid_t pid;
     std::intptr_t address;
-    bool enabled;
-    uint8_t saved_data;
+    bool enabled = false;
+    uint8_t saved_data = 0;
 };
 
 tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp);
