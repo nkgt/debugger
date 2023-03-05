@@ -2,6 +2,10 @@
 #include <cstdint>
 #include <sys/types.h>
 
+#include <tl/expected.hpp>
+
+#include "nkgt/error_codes.hpp"
+
 namespace nkgt::debugger {
 
 struct breakpoint {
@@ -11,8 +15,8 @@ struct breakpoint {
     uint8_t saved_data;
 };
 
-void enable_brakpoint(breakpoint& bp);
-void disable_brakpoint(breakpoint& bp);
+tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp);
+tl::expected<void, error::breakpoint> disable_brakpoint(breakpoint& bp);
 
 void run(pid_t pid);
 

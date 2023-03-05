@@ -23,15 +23,23 @@ FetchContent_Declare(
     GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(fmt linenoise)
+set(EXPECTED_BUILD_TESTS OFF)
+set(EXPECTED_BUILD_PACKAGE_DEB OFF)
+FetchContent_Declare(
+    expected
+    GIT_REPOSITORY https://github.com/TartanLlama/expected
+    GIT_TAG        master
+)
+
+FetchContent_MakeAvailable(fmt linenoise expected)
 
 add_library(debugger src/debugger.cpp src/util.cpp)
 target_include_directories(debugger PUBLIC include)
-target_link_libraries(debugger PRIVATE fmt::fmt linenoise)
+target_link_libraries(debugger PRIVATE fmt::fmt linenoise expected)
 set_compiler_flags(debugger)
 
 add_executable(dbg frontend/main.cpp)
-target_link_libraries(dbg PRIVATE fmt::fmt debugger)
+target_link_libraries(dbg PRIVATE fmt::fmt debugger expected)
 set_compiler_flags(dbg)
 
 if(DEBUGGER_EXAMPLE)
