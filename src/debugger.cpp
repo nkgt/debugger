@@ -30,7 +30,7 @@ static void handle_command(const std::string& line, pid_t pid) {
     if(nkgt::util::is_prefix(command, "continue")) {
         continue_execution(pid);
     } else {
-        fmt::print("Unknow command");
+        fmt::print("Unknow command\n");
     }
 }
 
