@@ -1,6 +1,6 @@
 #include <iostream>
 
 int main() {
-    std::cout << "Hello debugger!\n";
+    std::cerr << "Hello debugger!\n";
     return 0;
 }
