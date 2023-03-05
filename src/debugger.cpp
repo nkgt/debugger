@@ -35,7 +35,26 @@ static void try_set_breakpoint(std::string_view address_str, pid_t pid) {
     }
 
     breakpoint bp = {pid, address};
-    enable_brakpoint(bp);
+    const auto result = enable_brakpoint(bp);
+
+    if(!result) {
+        switch(result.error()) {
+        case error::breakpoint::peek_address_fail:
+            fmt::print(
+                "Failed to retrieve instruction at address {} for PID {}",
+                address,
+                pid
+            );
+            break;
+        case error::breakpoint::poke_address_fail:
+            fmt::print(
+                "Failed to modify instruction at address {} for PID {}",
+                address,
+                pid
+            );
+            break;
+        }
+    }
 }
 
 static void handle_command(const std::string& line, pid_t pid) {
@@ -77,15 +96,15 @@ tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp) {
         return tl::unexpected(error::breakpoint::peek_address_fail);
     }
 
-
     long data_with_trap = ((data & ~0xff) | 0xcc);
-    bp.saved_data = static_cast<uint8_t>(data & 0xff);
-    
     if(ptrace(PTRACE_POKEDATA, bp.pid, bp.address, data_with_trap) == -1) {
         util::print_error_message("ptrace", errno);
         return tl::unexpected(error::breakpoint::poke_address_fail);
     }
 
+    // The breakpoint is modified at the end so that in case of errors there is
+    // no leftover data in it.
+    bp.saved_data = static_cast<uint8_t>(data & 0xff);
     bp.enabled = true;
 
     return {};
