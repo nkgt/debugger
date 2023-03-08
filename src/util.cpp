@@ -16,7 +16,7 @@ void print_error_message(const char* procedure_name, int error_number) {
     }
 
     fmt::print(
-        "{} failure\n\tError code: {}\n\tError message: {}",
+        "{} failure\n\tError code: {}\n\tError message: {}\n",
         procedure_name,
         strerrorname_np(error_number),
         strerror(error_number)

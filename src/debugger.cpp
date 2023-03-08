@@ -21,6 +21,11 @@ static void continue_execution(pid_t pid) {
 }
 
 static void try_set_breakpoint(std::string_view address_str, pid_t pid) {
+    if(address_str.substr(0, 2) != "0x") {
+        fmt::print("Address argument to break command should start with 0x.\n");
+        return; 
+    }
+
     long address = 0;
     auto [_, ec] = std::from_chars(
         address_str.data() + 2, 
@@ -69,8 +74,13 @@ static void handle_command(const std::string& line, pid_t pid) {
     if(nkgt::util::is_prefix(command, "continue")) {
         continue_execution(pid);
     } else if(util::is_prefix(command, "break")) {
-        if(args.size() != 2) {
+        if(args.size() == 1) {
             fmt::print("Missing argument for break command.\n");
+            return;
+        }
+
+        if(args.size() > 2) {
+            fmt::print("Too many arguments for break command.\n");
             return;
         }
 
