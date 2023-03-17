@@ -260,7 +260,7 @@ namespace nkgt::debugger {
 // In x86 0xcc is the instruction that identifies a breakpoint. So enabling
 // a breakpoint simply means replacing whatever instruction is at
 // bp.address with 0xcc.
-tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp) {
+[[nodiscard]]
 tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp) {
     // Calling ptrace with PTRACE_PEEKDATA retrieves the word at bp.address for
     // the process identified by bp.pid. This means that -1 is a valid return
@@ -290,7 +290,7 @@ tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp) {
 
 // Disables a breakpoint by restoring the original data (bp.saved_data) in the
 // location bp.address.
-tl::expected<void, error::breakpoint> disable_brakpoint(breakpoint& bp) {
+[[nodiscard]]
 tl::expected<void, error::breakpoint> disable_breakpoint(breakpoint& bp) {
     // See comment in enable_brakpoint() for more info.
     errno = 0;
