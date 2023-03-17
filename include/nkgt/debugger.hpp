@@ -15,8 +15,8 @@ struct breakpoint {
     uint8_t saved_data = 0;
 };
 
-tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp);
-tl::expected<void, error::breakpoint> disable_brakpoint(breakpoint& bp);
+tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp);
+tl::expected<void, error::breakpoint> disable_breakpoint(breakpoint& bp);
 
 void run(pid_t pid);
 

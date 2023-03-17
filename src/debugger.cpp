@@ -50,7 +50,7 @@ auto step_over_breakpoint(
 
         nkgt::debugger::breakpoint& bp = bp_it->second;
 
-        const auto bp_result = nkgt::debugger::disable_brakpoint(bp);
+        const auto bp_result = nkgt::debugger::disable_breakpoint(bp);
         if(!bp_result) {
             fmt::print("Failed to disable breakpoint at {}.\n", bp.address);
             return false;
@@ -63,7 +63,7 @@ auto step_over_breakpoint(
 
         wait_for_signal(pid);
 
-        const auto set_bp_result = nkgt::debugger::enable_brakpoint(bp);
+        const auto set_bp_result = nkgt::debugger::enable_breakpoint(bp);
         if(!set_bp_result) {
             fmt::print("Failed to re-enable breakpoint at {}.\n", bp.address);
             return false;
@@ -136,7 +136,7 @@ auto try_set_breakpoint(
     }
 
     nkgt::debugger::breakpoint bp = {pid, *address};
-    const auto result = enable_brakpoint(bp);
+    const auto result = enable_breakpoint(bp);
 
     if(!result) {
         switch(result.error()) {
@@ -261,6 +261,7 @@ namespace nkgt::debugger {
 // a breakpoint simply means replacing whatever instruction is at
 // bp.address with 0xcc.
 tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp) {
+tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp) {
     // Calling ptrace with PTRACE_PEEKDATA retrieves the word at bp.address for
     // the process identified by bp.pid. This means that -1 is a valid return
     // value and does not necesserely describe an error. To solve this we clear
@@ -290,6 +291,7 @@ tl::expected<void, error::breakpoint> enable_brakpoint(breakpoint& bp) {
 // Disables a breakpoint by restoring the original data (bp.saved_data) in the
 // location bp.address.
 tl::expected<void, error::breakpoint> disable_brakpoint(breakpoint& bp) {
+tl::expected<void, error::breakpoint> disable_breakpoint(breakpoint& bp) {
     // See comment in enable_brakpoint() for more info.
     errno = 0;
     long data = ptrace(PTRACE_PEEKDATA, bp.pid, bp.address, nullptr);
