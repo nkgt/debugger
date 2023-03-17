@@ -130,7 +130,7 @@ auto try_set_breakpoint(
         return;
     }
 
-    if(breakpoint_list.find(*address) == breakpoint_list.cend()) {
+    if(breakpoint_list.find(*address) != breakpoint_list.cend()) {
         fmt::print("Breakpoint already active at {}.\n", address_str);
         return;
     }
