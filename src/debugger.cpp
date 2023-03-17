@@ -15,8 +15,78 @@
 
 namespace {
 
-void continue_execution(pid_t pid) {
-    ptrace(PTRACE_CONT, pid, nullptr, nullptr);
+auto wait_for_signal(pid_t pid) -> void {
+    int wait_status = 0;
+    int options = 0;
+
+    waitpid(pid, &wait_status, options);
+}
+
+auto step_over_breakpoint(
+    pid_t pid,
+    std::unordered_map<std::intptr_t, nkgt::debugger::breakpoint>& breakpoint_list
+) -> bool {
+    const auto current_pc = nkgt::registers::get_register_value(pid, nkgt::registers::reg::rip);
+
+    if(!current_pc) {
+        fmt::print("Failed to get current Program Counter value.\n");
+        return false;
+    }
+
+    uint64_t possible_bp_location = *current_pc - 1;
+
+    const auto& bp_it = breakpoint_list.find(possible_bp_location);
+    if(bp_it != breakpoint_list.cend() && bp_it->second.enabled) {
+        const auto pc_result = nkgt::registers::set_register_value(
+            pid,
+            nkgt::registers::reg::rip,
+            possible_bp_location
+        );
+
+        if(!pc_result) {
+            fmt::print("Failed to set Program Counter value.\n");
+            return false;
+        }
+
+        nkgt::debugger::breakpoint& bp = bp_it->second;
+
+        const auto bp_result = nkgt::debugger::disable_brakpoint(bp);
+        if(!bp_result) {
+            fmt::print("Failed to disable breakpoint at {}.\n", bp.address);
+            return false;
+        }
+
+        if(ptrace(PTRACE_SINGLESTEP, pid, nullptr, nullptr) == -1) {
+            nkgt::util::print_error_message("ptrace", errno);
+            return false;
+        }
+
+        wait_for_signal(pid);
+
+        const auto set_bp_result = nkgt::debugger::enable_brakpoint(bp);
+        if(!set_bp_result) {
+            fmt::print("Failed to re-enable breakpoint at {}.\n", bp.address);
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+auto continue_execution(
+    pid_t pid,
+    std::unordered_map<std::intptr_t, nkgt::debugger::breakpoint>& breakpoint_list
+) -> void {
+    const bool result = step_over_breakpoint(pid, breakpoint_list);
+
+    if(!result) {
+        fmt::print("Failed to step over breakpoint. Continuing execution with in unknow state\n");
+    }
+
+    if(ptrace(PTRACE_CONT, pid, nullptr, nullptr) == -1) {
+        nkgt::util::print_error_message("ptrace", errno);
+        return;
+    }
     
     int wait_status = 0;
     int options = 0;
@@ -157,7 +227,7 @@ auto handle_command(
     std::string_view command = args[0];
 
     if(nkgt::util::is_prefix(command, "continue")) {
-        continue_execution(pid);
+        continue_execution(pid, breakpoint_list);
     } else if(nkgt::util::is_prefix(command, "break")) {
         if(args.size() == 1) {
             fmt::print("Missing argument for break command.\n");
