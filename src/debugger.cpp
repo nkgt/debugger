@@ -2,15 +2,16 @@
 #include "nkgt/error_codes.hpp"
 #include "nkgt/registers.hpp"
 #include "nkgt/util.hpp"
-#include "tl/expected.hpp"
 
 #include <linenoise.h>
 #include <fmt/core.h>
+#include <tl/expected.hpp>
 
 #include <cerrno>
 #include <charconv>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+#include <unordered_map>
 
 namespace {
 
@@ -27,7 +28,7 @@ auto hex_from_str(
     std::string_view address_str
 ) -> tl::expected<T, nkgt::error::address> {
     if(address_str.substr(0, 2) != "0x") {
-        fmt::print("Address argument to break command should start with 0x.\n");
+        fmt::print("HEX argument to command should start with 0x.\n");
         return tl::make_unexpected(nkgt::error::address::malformed_register);
     }
 
@@ -47,11 +48,20 @@ auto hex_from_str(
     return address;
 }
 
-void try_set_breakpoint(std::string_view address_str, pid_t pid) {
+auto try_set_breakpoint(
+    std::string_view address_str,
+    pid_t pid,
+    std::unordered_map<std::intptr_t, nkgt::debugger::breakpoint>& breakpoint_list
+) -> void {
     const auto address = hex_from_str<std::intptr_t>(address_str);
 
     if(!address) {
         fmt::print("Failed to parse address.\n");
+        return;
+    }
+
+    if(breakpoint_list.find(*address) == breakpoint_list.cend()) {
+        fmt::print("Breakpoint already active at {}.\n", address_str);
         return;
     }
 
@@ -76,6 +86,8 @@ void try_set_breakpoint(std::string_view address_str, pid_t pid) {
             break;
         }
     }
+
+    breakpoint_list[*address] = bp;
 }
 
 auto try_set_register(
@@ -131,7 +143,11 @@ auto try_read_register(
     }
 }
 
-void handle_command(const std::string& line, pid_t pid) {
+auto handle_command(
+    const std::string& line,
+    pid_t pid,
+    std::unordered_map<std::intptr_t, nkgt::debugger::breakpoint>& breakpoint_list
+) -> void {
     std::vector<std::string_view> args = nkgt::util::split(line, ' ');
 
     if(args.empty()) {
@@ -153,7 +169,7 @@ void handle_command(const std::string& line, pid_t pid) {
             return;
         }
 
-        try_set_breakpoint(args[1], pid);
+        try_set_breakpoint(args[1], pid, breakpoint_list);
     } else if(nkgt::util::is_prefix(command, "register")) {
         if(args.size() == 2 && args[1] == "dump") {
             nkgt::registers::dump_registers(pid);
@@ -166,6 +182,7 @@ void handle_command(const std::string& line, pid_t pid) {
         fmt::print("Unknow command\n");
     }
 }
+
 }
 
 namespace nkgt::debugger {
@@ -230,9 +247,11 @@ void run(pid_t pid) {
     // wait for the child process to finish launching the programm we want to debug
     waitpid(pid, &wait_status, options);
 
+    std::unordered_map<std::intptr_t, breakpoint> breakpoint_list;
+
     char* line = nullptr;
     while((line = linenoise("dbg> ")) != nullptr) {
-        handle_command(line, pid);
+        handle_command(line, pid, breakpoint_list);
         linenoiseHistoryAdd(line);
         linenoiseFree(line);
     }
