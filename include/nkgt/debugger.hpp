@@ -1,10 +1,10 @@
 #pragma once
-#include <cstdint>
-#include <sys/types.h>
+#include "nkgt/error_codes.hpp"
 
 #include <tl/expected.hpp>
 
-#include "nkgt/error_codes.hpp"
+#include <cstdint>
+#include <sys/types.h>
 
 namespace nkgt::debugger {
 

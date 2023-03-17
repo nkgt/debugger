@@ -33,7 +33,11 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(fmt linenoise expected)
 
-add_library(debugger src/debugger.cpp src/util.cpp)
+add_library(debugger
+    src/debugger.cpp
+    src/util.cpp
+    src/registers.cpp
+)
 target_include_directories(debugger PUBLIC include)
 target_link_libraries(debugger PRIVATE fmt::fmt linenoise expected)
 set_compiler_flags(debugger)

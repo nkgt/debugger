@@ -7,4 +7,15 @@ enum class breakpoint {
     poke_address_fail,
 };
 
+enum class registers {
+    getregs_fail,
+    setregs_fail,
+    unknown_dwarf_number,
+    unknown_reg_name,
+};
+
+enum class address {
+    malformed_register,
+};
+
 }
