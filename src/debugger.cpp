@@ -217,7 +217,7 @@ auto try_read_register(
         }
     }
 
-    fmt::print("{} = {:#018x}\n", reg_str, value);
+    fmt::print("{} = {:#018x}\n", reg_str, *value);
     return;
 }
 
@@ -291,6 +291,38 @@ auto handle_command(
     return false;
 }
 
+auto init_debug_symbols(
+    const char* program_path
+) -> tl::expected<Dwarf_Debug, nkgt::error::debug_symbols> {
+    char actual_path[FILENAME_MAX];
+    Dwarf_Handler error_handler = 0;
+    Dwarf_Ptr error_arg = 0;
+    Dwarf_Error error = 0;
+    Dwarf_Debug dbg = 0;
+
+    int result = dwarf_init_path(
+        program_path, 
+        actual_path, 
+        FILENAME_MAX, 
+        DW_GROUPNUMBER_ANY, 
+        error_handler, 
+        error_arg, 
+        &dbg,
+        &error
+    );
+
+    if(result == DW_DLV_ERROR) {
+        dwarf_dealloc_error(dbg, error);
+        return tl::make_unexpected(nkgt::error::debug_symbols::load_fail);
+    }
+
+    if(result == DW_DLV_NO_ENTRY) {
+        return tl::make_unexpected(nkgt::error::debug_symbols::load_fail);
+    }
+
+    return dbg;
+}
+
 }
 
 namespace nkgt::debugger {
@@ -354,7 +386,7 @@ auto disable_breakpoint(
     return {};
 }
 
-void run(pid_t pid) {
+void run(pid_t pid, const char* program_path) {
     // wait for the child process to finish launching the program we want to debug
     wait_for_signal(pid);
 
@@ -362,6 +394,13 @@ void run(pid_t pid) {
     // exit when the debugger itself exits.
     if(ptrace(PTRACE_SETOPTIONS, pid, nullptr, PTRACE_O_EXITKILL) == -1) {
         util::print_error_message("ptrace", errno);
+        return;
+    }
+
+    const auto symbols = init_debug_symbols(program_path);
+
+    if(!symbols) {
+        fmt::print("Failed to load the debug symbols.\n");
         return;
     }
 
@@ -377,6 +416,8 @@ void run(pid_t pid) {
         linenoiseHistoryAdd(line);
         linenoiseFree(line);
     }
+
+    dwarf_finish(*symbols);
 }
 
 }
