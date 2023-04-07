@@ -213,15 +213,57 @@ auto try_read_register(
     }
 }
 
+auto handle_break_command(
+    std::vector<std::string_view> args,
+    pid_t pid,
+    std::unordered_map<std::intptr_t, nkgt::debugger::breakpoint>& breakpoint_list
+) -> void {
+    if(args.size() != 2) {
+        fmt::print(
+            "Wrong number of arguments for register command {}. Allowed usages are\n"
+            "\tbreak address\n",
+            "break"
+        );
+
+        return;
+    }
+
+    try_set_breakpoint(args[1], pid, breakpoint_list);
+    return;
+}
+
+auto handle_register_command(
+    std::vector<std::string_view> args,
+    pid_t pid
+) -> void {
+    if(args.size() == 2 && args[1] == "dump") {
+        nkgt::registers::dump_registers(pid);
+    } else if (args.size() == 3 && args[1] == "read") {
+        try_read_register(args[2], pid);
+    } else if (args.size() == 4 && args[1] == "write") {
+        try_set_register(args[3], args[2], pid);
+    } else {
+        fmt::print(
+            "Wrong number of arguments for register command {}. Allowed usages are\n"
+            "\tregister dump\n"
+            "\tregister read register_name\n"
+            "\tregister write register_name value\n",
+            "register"
+        );
+    }
+}
+
+// Parses the user input and then dispatches to the appropriate command logic.
+// Return true if the "quit" command has been issued, false otherwise.
 auto handle_command(
     const std::string& line,
     pid_t pid,
     std::unordered_map<std::intptr_t, nkgt::debugger::breakpoint>& breakpoint_list
-) -> void {
+) -> bool {
     std::vector<std::string_view> args = nkgt::util::split(line, ' ');
 
     if(args.empty()) {
-        return;
+        return false;
     }
 
     std::string_view command = args[0];
@@ -229,28 +271,16 @@ auto handle_command(
     if(nkgt::util::is_prefix(command, "continue")) {
         continue_execution(pid, breakpoint_list);
     } else if(nkgt::util::is_prefix(command, "break")) {
-        if(args.size() == 1) {
-            fmt::print("Missing argument for break command.\n");
-            return;
-        }
-
-        if(args.size() > 2) {
-            fmt::print("Too many arguments for break command.\n");
-            return;
-        }
-
-        try_set_breakpoint(args[1], pid, breakpoint_list);
+        handle_break_command(args, pid, breakpoint_list);
     } else if(nkgt::util::is_prefix(command, "register")) {
-        if(args.size() == 2 && args[1] == "dump") {
-            nkgt::registers::dump_registers(pid);
-        } else if (args.size() == 3 && args[1] == "read") {
-            try_read_register(args[2], pid);
-        } else if (args.size() == 4 && args[1] == "write") {
-            try_set_register(args[3], args[2], pid);
-        }
+        handle_register_command(args, pid);
+    } else if(nkgt::util::is_prefix(command, "quit")) {
+        return true;
     } else {
         fmt::print("Unknow command\n");
     }
+
+    return false;
 }
 
 }
@@ -317,17 +347,25 @@ auto disable_breakpoint(
 }
 
 void run(pid_t pid) {
-    int wait_status = 0;
-    int options = 0;
-
     // wait for the child process to finish launching the program we want to debug
-    waitpid(pid, &wait_status, options);
+    wait_for_signal(pid);
+
+    // Setting the option PTRACE_O_EXITKILL to the debugee ensures that it will
+    // exit when the debugger itself exits.
+    if(ptrace(PTRACE_SETOPTIONS, pid, nullptr, PTRACE_O_EXITKILL) == -1) {
+        util::print_error_message("ptrace", errno);
+        return;
+    }
 
     std::unordered_map<std::intptr_t, breakpoint> breakpoint_list;
 
     char* line = nullptr;
     while((line = linenoise("dbg> ")) != nullptr) {
-        handle_command(line, pid, breakpoint_list);
+        if(handle_command(line, pid, breakpoint_list)) {
+            linenoiseFree(line);
+            break;
+        }
+
         linenoiseHistoryAdd(line);
         linenoiseFree(line);
     }
