@@ -7,7 +7,7 @@ project(
 )
 
 cmake_minimum_required(VERSION 3.22)
-set(CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
 include(cmake/compiler_flags.cmake)
 include(FetchContent)
