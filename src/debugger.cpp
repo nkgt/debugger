@@ -244,11 +244,11 @@ auto handle_register_command(
     std::vector<std::string_view> args,
     pid_t pid
 ) -> void {
-    if(args.size() == 2 && args[1] == "dump") {
+    if(args.size() == 2 && nkgt::util::is_prefix(args[1], "dump")) {
         nkgt::registers::dump_registers(pid);
-    } else if (args.size() == 3 && args[1] == "read") {
+    } else if (args.size() == 3 && nkgt::util::is_prefix(args[1], "read")) {
         try_read_register(args[2], pid);
-    } else if (args.size() == 4 && args[1] == "write") {
+    } else if (args.size() == 4 && nkgt::util::is_prefix(args[1], "write")) {
         try_set_register(args[3], args[2], pid);
     } else {
         fmt::print(
@@ -291,6 +291,7 @@ auto handle_command(
     return false;
 }
 
+[[nodiscard]]
 auto init_debug_symbols(
     const std::filesystem::path& program_path
 ) -> tl::expected<Dwarf_Debug, nkgt::error::debug_symbols> {

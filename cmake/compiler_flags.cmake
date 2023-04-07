@@ -13,10 +13,10 @@ function(set_compiler_flags target)
         -Wsign-conversion
         -Wformat=2
         $<$<CXX_COMPILER_ID:GNU>:
-            -Wmisleading-indentation 
-            -Wduplicated-cond 
-            -Wduplicated-branches 
-            -Wlogical-op 
+            -Wmisleading-indentation
+            -Wduplicated-cond
+            -Wduplicated-branches
+            -Wlogical-op
             -Wuseless-cast
             $<$<CONFIG:Release>: -Wnull-dereference>
         >
