@@ -175,20 +175,26 @@ auto get_register_value(
     pid_t pid,
     reg r
 ) -> tl::expected<uint64_t, error::registers> {
-    return query_user_regs(pid)
-           .map([&r](auto&& regs) {
-                return get_register_value_from_user_regs(regs, r);
-           });
+    const auto regs = query_user_regs(pid);
+
+    if(!regs) {
+        return tl::make_unexpected(regs.error());
+    }
+
+    return get_register_value_from_user_regs(*regs, r);
 }
 
 auto get_register_value_from_dwarf_number(
     pid_t pid,
     unsigned dwarf_number
 ) -> tl::expected<uint64_t, error::registers> {
-    return query_user_regs(pid)
-           .and_then([&dwarf_number](auto&& regs) {
-                return get_register_value_from_user_regs(regs, dwarf_number);
-           });
+    const auto regs = query_user_regs(pid);
+
+    if(!regs) {
+        return tl::make_unexpected(regs.error());
+    }
+
+    return get_register_value_from_user_regs(*regs, dwarf_number);
 }
 
 auto set_register_value(
@@ -196,9 +202,6 @@ auto set_register_value(
     reg r,
     uint64_t value
 ) -> tl::expected<void, error::registers> {
-    // Cannot use functional style here I think because the type return from
-    // query_user_regs() and the one from set_register_value() are different.
-    // Or maybe I just don't know how to do it...
     auto regs = query_user_regs(pid);
 
     if(!regs) {
@@ -213,7 +216,6 @@ auto set_register_value(
     }
 
     return {};
-
 }
 
 auto to_string(reg r) -> std::string {

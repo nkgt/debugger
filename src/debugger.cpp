@@ -3,6 +3,7 @@
 #include "nkgt/registers.hpp"
 #include "nkgt/util.hpp"
 
+#include <libdwarf.h>
 #include <linenoise.h>
 #include <fmt/core.h>
 #include <tl/expected.hpp>
@@ -190,27 +191,34 @@ auto try_read_register(
     std::string_view reg_str,
     pid_t pid
 ) -> void {
-    const auto result = nkgt::registers::from_string(reg_str)
-        .and_then([pid](auto&& reg) {
-            return nkgt::registers::get_register_value(pid, reg);
-        }).map([reg_str](auto&& value) {
-            fmt::print("{} = {:#018x}\n", reg_str, value);
-            return;
-        });
+    const auto reg = nkgt::registers::from_string(reg_str);
 
-    if(!result) {
-        switch(result.error()) {
+    if(!reg) {
+        switch(reg.error()) {
         case nkgt::error::registers::unknown_reg_name:
-            fmt::print("Unknown register name {}\n", reg_str);
-            return;
-        case nkgt::error::registers::getregs_fail:
-            fmt::print("Failed to retrieve the register value\n");
+            fmt::print("{} is not the name of a register.\n", reg_str);
             return;
         default:
-            fmt::print("");
+            fmt::print("Unknown error while paring the register name {}.\n", reg_str);
             return;
         }
     }
+
+    const auto value = nkgt::registers::get_register_value(pid, *reg);
+
+    if(!value) {
+        switch(value.error()) {
+        case nkgt::error::registers::getregs_fail:
+            fmt::print("Failed to get retrieve the value of the register {}.\n", reg_str);
+            return;
+        default:
+            fmt::print("Unknown error while trying to retrive the value for the register {}.\n", reg_str);
+            return;
+        }
+    }
+
+    fmt::print("{} = {:#018x}\n", reg_str, value);
+    return;
 }
 
 auto handle_break_command(
