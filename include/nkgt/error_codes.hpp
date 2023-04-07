@@ -18,4 +18,8 @@ enum class address {
     malformed_register,
 };
 
+enum class debug_symbols {
+    load_fail,
+};
+
 }

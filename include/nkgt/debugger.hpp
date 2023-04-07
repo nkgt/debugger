@@ -18,6 +18,6 @@ struct breakpoint {
 tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp);
 tl::expected<void, error::breakpoint> disable_breakpoint(breakpoint& bp);
 
-void run(pid_t pid);
+void run(pid_t pid, const char* program_path);
 
 }

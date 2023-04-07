@@ -38,7 +38,7 @@ int main(int argc, const char** argv) {
     if(pid == 0) {
         execute_debugee(program_name);
     } else if(pid >= 1) {
-        nkgt::debugger::run(pid);
+        nkgt::debugger::run(pid, program_name);
     } else {
         nkgt::util::print_error_message("fork", errno);
         return -1;
