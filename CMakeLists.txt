@@ -32,7 +32,13 @@ FetchContent_Declare(
     GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(fmt linenoise expected)
+FetchContent_Declare(
+    dwarf
+    GIT_REPOSITORY https://github.com/davea42/libdwarf-code
+    GIT_TAG        v0.6.0
+)
+
+FetchContent_MakeAvailable(fmt linenoise expected dwarf)
 
 add_library(debugger
     src/debugger.cpp
@@ -40,7 +46,7 @@ add_library(debugger
     src/registers.cpp
 )
 target_include_directories(debugger PUBLIC include)
-target_link_libraries(debugger PRIVATE fmt::fmt linenoise expected)
+target_link_libraries(debugger PRIVATE fmt::fmt linenoise expected dwarf-static)
 set_compiler_flags(debugger)
 
 add_executable(dbg frontend/main.cpp)
