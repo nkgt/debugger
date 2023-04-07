@@ -4,6 +4,7 @@
 #include <tl/expected.hpp>
 
 #include <cstdint>
+#include <filesystem>
 #include <sys/types.h>
 
 namespace nkgt::debugger {
@@ -18,6 +19,6 @@ struct breakpoint {
 tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp);
 tl::expected<void, error::breakpoint> disable_breakpoint(breakpoint& bp);
 
-void run(pid_t pid, const char* program_path);
+void run(pid_t pid, const std::filesystem::path& program_path);
 
 }

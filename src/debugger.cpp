@@ -292,7 +292,7 @@ auto handle_command(
 }
 
 auto init_debug_symbols(
-    const char* program_path
+    const std::filesystem::path& program_path
 ) -> tl::expected<Dwarf_Debug, nkgt::error::debug_symbols> {
     char actual_path[FILENAME_MAX];
     Dwarf_Handler error_handler = 0;
@@ -301,7 +301,7 @@ auto init_debug_symbols(
     Dwarf_Debug dbg = 0;
 
     int result = dwarf_init_path(
-        program_path, 
+        program_path.c_str(), 
         actual_path, 
         FILENAME_MAX, 
         DW_GROUPNUMBER_ANY, 
@@ -386,7 +386,10 @@ auto disable_breakpoint(
     return {};
 }
 
-void run(pid_t pid, const char* program_path) {
+auto run(
+    pid_t pid,
+    const std::filesystem::path& program_path
+) -> void {
     // wait for the child process to finish launching the program we want to debug
     wait_for_signal(pid);
 
@@ -418,6 +421,7 @@ void run(pid_t pid, const char* program_path) {
     }
 
     dwarf_finish(*symbols);
+    return;
 }
 
 }

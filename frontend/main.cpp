@@ -1,10 +1,13 @@
-#include <cstdlib>
+#include <filesystem>
+namespace fs = std::filesystem;
+
 #include <sys/personality.h>
 #include <sys/ptrace.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <fmt/core.h>
+#include <fmt/std.h>
 
 #include "nkgt/debugger.hpp"
 #include "nkgt/util.hpp"
@@ -32,13 +35,18 @@ int main(int argc, const char** argv) {
         return -1;
     }
 
-    const char* program_name = argv[1];
+    const fs::path program_path(argv[1]);
+    if(!fs::exists(program_path) || !fs::is_regular_file(program_path)) {
+        fmt::print("The file {} does not exists or is not a regular file.\n", program_path);
+        return EXIT_FAILURE;
+    }
+
     pid_t pid = fork();
 
     if(pid == 0) {
-        execute_debugee(program_name);
+        execute_debugee(program_path.c_str());
     } else if(pid >= 1) {
-        nkgt::debugger::run(pid, program_name);
+        nkgt::debugger::run(pid, program_path);
     } else {
         nkgt::util::print_error_message("fork", errno);
         return -1;
