@@ -204,7 +204,7 @@ auto try_read_register(
             fmt::print("Unknown register name {}\n", reg_str);
             return;
         case nkgt::error::registers::getregs_fail:
-            fmt::print("Failed to retrive the register value\n");
+            fmt::print("Failed to retrieve the register value\n");
             return;
         default:
             fmt::print("");
@@ -261,10 +261,12 @@ namespace nkgt::debugger {
 // a breakpoint simply means replacing whatever instruction is at
 // bp.address with 0xcc.
 [[nodiscard]]
-tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp) {
+auto enable_breakpoint(
+    breakpoint& bp
+) -> tl::expected<void, error::breakpoint> {
     // Calling ptrace with PTRACE_PEEKDATA retrieves the word at bp.address for
     // the process identified by bp.pid. This means that -1 is a valid return
-    // value and does not necesserely describe an error. To solve this we clear
+    // value and does not necessarily describe an error. To solve this we clear
     // errno before calling ptrace and we check it right after.
     // More info at RETURN_VALUE in ptrace(2).
     errno = 0;
@@ -291,8 +293,10 @@ tl::expected<void, error::breakpoint> enable_breakpoint(breakpoint& bp) {
 // Disables a breakpoint by restoring the original data (bp.saved_data) in the
 // location bp.address.
 [[nodiscard]]
-tl::expected<void, error::breakpoint> disable_breakpoint(breakpoint& bp) {
-    // See comment in enable_brakpoint() for more info.
+auto disable_breakpoint(
+    breakpoint& bp
+) -> tl::expected<void, error::breakpoint> {
+    // See comment in enable_breakpoint() for more info.
     errno = 0;
     long data = ptrace(PTRACE_PEEKDATA, bp.pid, bp.address, nullptr);
     if(data == -1 && errno != 0) {
@@ -316,7 +320,7 @@ void run(pid_t pid) {
     int wait_status = 0;
     int options = 0;
 
-    // wait for the child process to finish launching the programm we want to debug
+    // wait for the child process to finish launching the program we want to debug
     waitpid(pid, &wait_status, options);
 
     std::unordered_map<std::intptr_t, breakpoint> breakpoint_list;
