@@ -31,7 +31,7 @@ static void execute_debugee(const char* program_name) {
 
 // Basic check for the input file validity.
 // Just for safety, we accept only ELF executable as debugee. As per elf(3), a
-// ELF executable will start with a magic nubmer formed by the bytes 0x7f, 'E',
+// ELF executable will start with a magic number formed by the bytes 0x7f, 'E',
 // 'L', 'F'. So we just load the first 4 bytes and check them.
 [[nodiscard]]
 static bool is_file_valid(const fs::path& program_path) {

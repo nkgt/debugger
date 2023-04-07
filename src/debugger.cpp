@@ -212,7 +212,7 @@ auto try_read_register(
             fmt::print("Failed to get retrieve the value of the register {}.\n", reg_str);
             return;
         default:
-            fmt::print("Unknown error while trying to retrive the value for the register {}.\n", reg_str);
+            fmt::print("Unknown error while trying to retrieve the value for the register {}.\n", reg_str);
             return;
         }
     }
