@@ -3,6 +3,7 @@
 #include "nkgt/registers.hpp"
 #include "nkgt/util.hpp"
 
+#include <cstdint>
 #include <libdwarf.h>
 #include <linenoise.h>
 #include <fmt/core.h>
@@ -302,12 +303,12 @@ auto init_debug_symbols(
     Dwarf_Debug dbg = 0;
 
     int result = dwarf_init_path(
-        program_path.c_str(), 
-        actual_path, 
-        FILENAME_MAX, 
-        DW_GROUPNUMBER_ANY, 
-        error_handler, 
-        error_arg, 
+        program_path.c_str(),
+        actual_path,
+        FILENAME_MAX,
+        DW_GROUPNUMBER_ANY,
+        error_handler,
+        error_arg,
         &dbg,
         &error
     );
@@ -321,7 +322,86 @@ auto init_debug_symbols(
         return tl::make_unexpected(nkgt::error::debug_symbols::load_fail);
     }
 
+    fmt::print("Loaded symbols from path: {}", actual_path);
     return dbg;
+}
+
+// Taken from https://www.prevanders.net/libdwarfdoc/group__examplecuhdr.html
+[[nodiscard]]
+auto get_func_die_from_pc(
+    const Dwarf_Debug& symbols,
+    std::uint64_t pc
+) -> int {
+    Dwarf_Unsigned abbrev_offset = 0;
+    Dwarf_Half address_size = 0;
+    Dwarf_Half version_stamp = 0;
+    Dwarf_Half offset_size = 0;
+    Dwarf_Half extension_size = 0;
+    Dwarf_Sig8 signature;
+    Dwarf_Unsigned typeoffset = 0;
+    Dwarf_Unsigned next_cu_header = 0;
+    Dwarf_Half header_cu_type = 0;
+    Dwarf_Bool is_info = 1;
+    Dwarf_Error error;
+
+    bool function_found = false;
+    int result = 0;
+
+    while(!function_found) {
+        Dwarf_Die no_die = 0;
+        Dwarf_Die cu_die = 0;
+        Dwarf_Unsigned cu_header_length = 0;
+
+        result = dwarf_next_cu_header_d(
+            symbols,
+            is_info,
+            &cu_header_length,
+            &version_stamp,
+            &abbrev_offset,
+            &address_size,
+            &offset_size,
+            &extension_size,
+            &signature,
+            &typeoffset,
+            &next_cu_header,
+            &header_cu_type,
+            &error
+        );
+
+        if(result == DW_DLV_ERROR) {
+            // TODO
+        }
+
+        if(result == DW_DLV_NO_ENTRY) {
+            if(is_info) {
+                fmt::print("Finished searching pc {} in .debug_info. Switching to .debug_types\n", pc);
+                is_info = 0;
+            }
+
+            fmt::print("Finished searching for pc {}\n", pc);
+            return result;
+        }
+
+        result = dwarf_siblingof_b(
+            symbols,
+            no_die,
+            is_info,
+            &cu_die,
+            &error
+        );
+
+        if(result == DW_DLV_ERROR) {
+            //
+        }
+
+        if(result == DW_DLV_NO_ENTRY) {
+            // FATAL ERROR
+        }
+
+        // CHECK FOR FUNCTION PC!
+    }
+
+    return result;
 }
 
 }
